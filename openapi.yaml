@@ -1,14 +1,14 @@
 openapi: 3.1.0
 info:
-  title: Notion API Integration (Multi-source Support)
-  description: Full Notion API updated for version 2025-09-03 introducing first-class support for multi-source databases.
-  version: 3.0.0
+  title: Notion API Integration (Inline Parameters)
+  description: Fixed parameter reference errors by inlining header definitions. Includes block children retrieval.
+  version: 3.1.3
 servers:
   - url: https://api.notion.com/v1
     description: Notion API
 
 paths:
-  # 1. 데이터베이스 조회 (이제 데이터 소스 목록을 반환함)
+  # 1. 데이터베이스 조회
   /databases/{database_id}:
     get:
       operationId: getDatabase
@@ -20,28 +20,80 @@ paths:
           required: true
           schema:
             type: string
-        - $ref: '#/components/parameters/NotionVersion'
+        # [수정] $ref 대신 직접 정의 (Inlining)
+        - in: header
+          name: Notion-Version
+          required: true
+          schema:
+            type: string
+            default: '2025-09-03'
+          example: '2025-09-03'
       responses:
         '200':
-          description: List of data sources retrieved
+          description: Successful response containing database metadata.
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Database'
 
-  # 2. 데이터 소스 쿼리 (기존 /databases/{id}/query에서 경로 변경)
+  # 2. 페이지 내용(블록) 조회 (필수 기능)
+  /blocks/{block_id}/children:
+    get:
+      operationId: getBlockChildren
+      summary: Retrieve page content blocks
+      description: Retrieves the content blocks of a page to enable summarization.
+      parameters:
+        - in: path
+          name: block_id
+          required: true
+          schema:
+            type: string
+        # [수정] 직접 정의
+        - in: header
+          name: Notion-Version
+          required: true
+          schema:
+            type: string
+            default: '2025-09-03'
+          example: '2025-09-03'
+      responses:
+        '200':
+          description: List of blocks retrieved successfully.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  results:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Block'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  # 3. 데이터 소스 쿼리
   /data_sources/{data_source_id}/query:
     post:
       operationId: queryDataSourcePages
       summary: Query pages in a data source
-      description: Retrieves pages from a specific data source.
       parameters:
         - in: path
           name: data_source_id
           required: true
           schema:
             type: string
-        - $ref: '#/components/parameters/NotionVersion'
+        # [수정] 직접 정의
+        - in: header
+          name: Notion-Version
+          required: true
+          schema:
+            type: string
+            default: '2025-09-03'
+          example: '2025-09-03'
       requestBody:
         content:
           application/json:
@@ -49,17 +101,28 @@ paths:
               $ref: '#/components/schemas/QueryRequest'
       responses:
         '200':
-          description: Successfully retrieved pages
+          description: Successfully retrieved filtered pages.
         '400':
-          $ref: '#/components/responses/ErrorResponse'
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
 
-  # 3. 페이지 생성 (부모를 data_source_id로 설정 권장)
+  # 4. 페이지 생성
   /pages:
     post:
       operationId: createPage
       summary: Create a new page
       parameters:
-        - $ref: '#/components/parameters/NotionVersion'
+        # [수정] 직접 정의
+        - in: header
+          name: Notion-Version
+          required: true
+          schema:
+            type: string
+            default: '2025-09-03'
+          example: '2025-09-03'
       requestBody:
         required: true
         content:
@@ -70,21 +133,17 @@ paths:
               properties:
                 parent:
                   type: object
-                  oneOf:
-                    - properties:
-                        type: { type: string, enum: [data_source_id] }
-                        data_source_id: { type: string }
-                    - properties:
-                        type: { type: string, enum: [page_id] }
-                        page_id: { type: string }
+                  properties:
+                    type: { type: string }
+                    data_source_id: { type: string }
                 properties:
                   type: object
                   additionalProperties: true
       responses:
         '200':
-          description: Page created successfully
+          description: Page created successfully.
 
-  # 4. 데이터 소스 정보 조회 및 수정 (새로운 엔드포인트)
+  # 5. 데이터 소스 정보 조회 및 수정
   /data_sources/{data_source_id}:
     get:
       operationId: getDataSource
@@ -95,21 +154,34 @@ paths:
           required: true
           schema:
             type: string
-        - $ref: '#/components/parameters/NotionVersion'
+        # [수정] 직접 정의
+        - in: header
+          name: Notion-Version
+          required: true
+          schema:
+            type: string
+            default: '2025-09-03'
+          example: '2025-09-03'
       responses:
         '200':
-          description: Data source metadata and properties (schema) retrieved.
+          description: Data source metadata retrieved.
     patch:
       operationId: updateDataSource
       summary: Update a data source
-      description: Updates properties (schema) or title of a specific data source.
       parameters:
         - in: path
           name: data_source_id
           required: true
           schema:
             type: string
-        - $ref: '#/components/parameters/NotionVersion'
+        # [수정] 직접 정의
+        - in: header
+          name: Notion-Version
+          required: true
+          schema:
+            type: string
+            default: '2025-09-03'
+          example: '2025-09-03'
       requestBody:
         content:
           application/json:
@@ -123,23 +195,10 @@ paths:
           description: Data source updated.
 
 components:
-  parameters:
-    NotionVersion:
-      in: header
-      name: Notion-Version
-      required: true
-      schema:
-        type: string
-        default: '2025-09-03'
-      example: '2025-09-03'
-
-  responses:
-    ErrorResponse:
-      description: Error occurred
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
 
   schemas:
     Database:
@@ -155,6 +214,15 @@ components:
               id: { type: string }
               name: { type: string }
     
+    Block:
+      type: object
+      description: Content block (paragraph, heading, etc.)
+      properties:
+        object: { type: string, example: "block" }
+        id: { type: string }
+        type: { type: string }
+      additionalProperties: true
+
     QueryRequest:
       type: object
       properties:
