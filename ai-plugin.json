@@ -1,0 +1,18 @@
+{
+  "schema_version": "v1",
+  "name_for_human": "Notion Assistant",
+  "name_for_model": "notionAssistant",
+  "description_for_human": "Access and manage Notion pages via GPT.",
+  "description_for_model": "Can read and write Notion pages using the Notion API.",
+  "auth": {
+    "type": "user_http",
+    "authorization_type": "bearer"
+  },
+  "api": {
+    "type": "openapi",
+    "url": "https://your-domain.com/openapi.yaml"
+  },
+  "logo_url": "https://your-domain.com/logo.png",
+  "contact_email": "you@example.com",
+  "legal_info_url": "https://your-domain.com/legal"
+}
