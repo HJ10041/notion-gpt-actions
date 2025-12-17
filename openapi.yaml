@@ -25,7 +25,7 @@ paths:
           required: true
           schema:
             type: string
-            default: "2022-06-28"
+            default: '2022-06-28'
       requestBody:
         required: false
         content:
@@ -105,7 +105,7 @@ paths:
           required: true
           schema:
             type: string
-            default: "2022-06-28"
+            default: '2022-06-28'
       requestBody:
         required: true
         content:
@@ -154,12 +154,12 @@ paths:
                   description: Cover image
             example:
               parent:
-                database_id: "xxxx"
+                database_id: xxxx
               properties:
                 Name:
                   title:
                     - text:
-                        content: "New Page"
+                        content: New Page
       responses:
         '200':
           description: Page created successfully
@@ -198,7 +198,7 @@ paths:
           required: true
           schema:
             type: string
-            default: "2022-06-28"
+            default: '2022-06-28'
       responses:
         '200':
           description: Page retrieved successfully
@@ -245,7 +245,7 @@ paths:
           required: true
           schema:
             type: string
-            default: "2022-06-28"
+            default: '2022-06-28'
       requestBody:
         required: true
         content:
@@ -314,7 +314,7 @@ paths:
           required: true
           schema:
             type: string
-            default: "2022-06-28"
+            default: '2022-06-28'
       responses:
         '200':
           description: Block children retrieved
@@ -357,7 +357,7 @@ paths:
           required: true
           schema:
             type: string
-            default: "2022-06-28"
+            default: '2022-06-28'
       requestBody:
         required: true
         content:
@@ -470,7 +470,7 @@ paths:
                     rich_text:
                       - type: text
                         text:
-                          content: "This is a new paragraph"
+                          content: This is a new paragraph
       responses:
         '200':
           description: Blocks appended successfully
@@ -509,7 +509,7 @@ paths:
           required: true
           schema:
             type: string
-            default: "2022-06-28"
+            default: '2022-06-28'
       responses:
         '200':
           description: Block retrieved
@@ -550,7 +550,7 @@ paths:
           required: true
           schema:
             type: string
-            default: "2022-06-28"
+            default: '2022-06-28'
       requestBody:
         required: true
         content:
@@ -657,7 +657,7 @@ paths:
                 rich_text:
                   - type: text
                     text:
-                      content: "Updated paragraph content"
+                      content: Updated paragraph content
       responses:
         '200':
           description: Block updated successfully
@@ -698,7 +698,7 @@ paths:
           required: true
           schema:
             type: string
-            default: "2022-06-28"
+            default: '2022-06-28'
       responses:
         '200':
           description: Block deleted
