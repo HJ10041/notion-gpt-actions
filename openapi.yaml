@@ -1,0 +1,128 @@
+openapi: 3.1.0
+info:
+  title: Notion Page Access & Writer
+  description: Access, create, and update Notion pages and blocks from a database.
+  version: 1.1.0
+servers:
+  - url: https://api.notion.com/v1
+    description: Notion API
+
+paths:
+
+  /databases/{database_id}/query:
+    post:
+      operationId: queryDatabasePages
+      summary: Query pages in a Notion database
+      parameters:
+        - in: path
+          name: database_id
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: List of pages
+      security:
+        - bearerAuth: []
+
+  /pages:
+    post:
+      operationId: createPage
+      summary: Create a new page
+      description: Creates a new page in a parent database or page.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                parent:
+                  type: object
+                  description: Database or page to contain the new page
+                properties:
+                  type: object
+                  description: Page properties
+                children:
+                  type: array
+                  items:
+                    type: object
+                  description: Content blocks
+      responses:
+        '200':
+          description: Created page
+      security:
+        - bearerAuth: []
+
+  /pages/{page_id}:
+    get:
+      operationId: getPageMetadata
+      summary: Get metadata of a page
+      parameters:
+        - in: path
+          name: page_id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Page metadata
+      security:
+        - bearerAuth: []
+
+  /blocks/{block_id}/children:
+    get:
+      operationId: getPageContentBlocks
+      summary: Get block children of a page
+      parameters:
+        - in: path
+          name: block_id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: List of content blocks
+      security:
+        - bearerAuth: []
+
+  /blocks/{block_id}/children:
+    patch:
+      operationId: appendBlockToPage
+      summary: Append content to a page
+      description: Adds new content blocks to an existing page or block.
+      parameters:
+        - in: path
+          name: block_id
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                children:
+                  type: array
+                  items:
+                    type: object
+      responses:
+        '200':
+          description: Block appended
+      security:
+        - bearerAuth: []
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: Notion API Token
