@@ -149,8 +149,10 @@ paths:
                     type: string
                   properties:
                     type: object
+                    additionalProperties: true
                   parent:
                     type: object
+                    additionalProperties: true
                   created_time:
                     type: string
                   last_edited_time:
@@ -182,12 +184,15 @@ paths:
               properties:
                 properties:
                   type: object
+                  additionalProperties: true
                   description: Updated page properties
                 icon:
                   type: object
+                  additionalProperties: true
                   description: Updated page icon
                 cover:
                   type: object
+                  additionalProperties: true
                   description: Updated cover image
                 archived:
                   type: boolean
@@ -199,6 +204,12 @@ paths:
             application/json:
               schema:
                 type: object
+                properties:
+                  id:
+                    type: string
+                  properties:
+                    type: object
+                    additionalProperties: true
         '400':
           description: Bad request
         '401':
@@ -314,6 +325,7 @@ paths:
           application/json:
             schema:
               type: object
+              additionalProperties: true
               description: Updated block content
       responses:
         '200':
@@ -322,6 +334,13 @@ paths:
             application/json:
               schema:
                 type: object
+                properties:
+                  id:
+                    type: string
+                  type:
+                    type: string
+                  object:
+                    type: string
         '400':
           description: Bad request
         '401':
