@@ -368,6 +368,13 @@ paths:
             application/json:
               schema:
                 type: object
+                properties:
+                  id:
+                    type: string
+                  object:
+                    type: string
+                  archived:
+                    type: boolean
         '404':
           description: Block not found
         '401':
