@@ -325,6 +325,7 @@ paths:
           application/json:
             schema:
               type: object
+              properties: {}
               additionalProperties: true
               description: Updated block content
       responses:
@@ -341,6 +342,7 @@ paths:
                     type: string
                   object:
                     type: string
+                additionalProperties: true
         '400':
           description: Bad request
         '401':
