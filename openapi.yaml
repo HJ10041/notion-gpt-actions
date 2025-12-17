@@ -6,10 +6,6 @@ info:
 servers:
   - url: https://api.notion.com/v1
     description: Notion API
-    variables: {}
-x-notion-version:
-  description: Required Notion API version header
-  value: "2022-06-28"
 
 paths:
   /databases/{database_id}/query:
@@ -24,6 +20,12 @@ paths:
           schema:
             type: string
           description: Database ID (without hyphens)
+        - in: header
+          name: Notion-Version
+          required: true
+          schema:
+            type: string
+            default: "2022-06-28"
       requestBody:
         required: false
         content:
@@ -33,14 +35,12 @@ paths:
               properties:
                 filter:
                   type: object
-                  properties: {}
                   additionalProperties: true
                   description: Filter conditions
                 sorts:
                   type: array
                   items:
                     type: object
-                    properties: {}
                     additionalProperties: true
                   description: Sort order
                 start_cursor:
@@ -68,7 +68,6 @@ paths:
                     type: array
                     items:
                       type: object
-                      properties: {}
                       additionalProperties: true
                   next_cursor:
                     type: string
@@ -79,7 +78,6 @@ paths:
                     type: string
                   page_or_database:
                     type: object
-                    properties: {}
                     additionalProperties: true
         '400':
           description: Bad request
@@ -129,14 +127,12 @@ paths:
                   description: Parent database or page
                 properties:
                   type: object
-                  properties: {}
                   additionalProperties: true
                   description: Page properties
                 children:
                   type: array
                   items:
                     type: object
-                    properties: {}
                     additionalProperties: true
                   description: Initial content blocks
                 icon:
@@ -178,7 +174,6 @@ paths:
                     type: string
                   properties:
                     type: object
-                    properties: {}
                     additionalProperties: true
         '400':
           description: Bad request
@@ -222,18 +217,16 @@ paths:
                     type: string
                   properties:
                     type: object
-                    properties: {}
                     additionalProperties: true
                   parent:
                     type: object
-                    properties: {}
                     additionalProperties: true
                   archived:
                     type: boolean
-        '404':
-          description: Page not found
         '401':
           description: Unauthorized
+        '404':
+          description: Page not found
       security:
         - bearerAuth: []
     
@@ -262,18 +255,15 @@ paths:
               properties:
                 properties:
                   type: object
-                  properties: {}
                   additionalProperties: true
                   description: Page properties to update
                 archived:
                   type: boolean
                 icon:
                   type: object
-                  properties: {}
                   additionalProperties: true
                 cover:
                   type: object
-                  properties: {}
                   additionalProperties: true
       responses:
         '200':
@@ -289,7 +279,6 @@ paths:
                     type: string
                   properties:
                     type: object
-                    properties: {}
                     additionalProperties: true
         '400':
           description: Bad request
@@ -340,17 +329,16 @@ paths:
                     type: array
                     items:
                       type: object
-                      properties: {}
                       additionalProperties: true
                   next_cursor:
                     type: string
                     nullable: true
                   has_more:
                     type: boolean
-        '404':
-          description: Block not found
         '401':
           description: Unauthorized
+        '404':
+          description: Block not found
       security:
         - bearerAuth: []
     
@@ -497,7 +485,6 @@ paths:
                     type: array
                     items:
                       type: object
-                      properties: {}
                       additionalProperties: true
         '400':
           description: Bad request
@@ -541,10 +528,10 @@ paths:
                     type: string
                   last_edited_time:
                     type: string
-        '404':
-          description: Block not found
         '401':
           description: Unauthorized
+        '404':
+          description: Block not found
       security:
         - bearerAuth: []
     
@@ -594,7 +581,6 @@ paths:
                       type: array
                       items:
                         type: object
-                        properties: {}
                         additionalProperties: true
                 heading_2:
                   type: object
@@ -603,7 +589,6 @@ paths:
                       type: array
                       items:
                         type: object
-                        properties: {}
                         additionalProperties: true
                 heading_3:
                   type: object
@@ -612,7 +597,6 @@ paths:
                       type: array
                       items:
                         type: object
-                        properties: {}
                         additionalProperties: true
                 bulleted_list_item:
                   type: object
@@ -621,7 +605,6 @@ paths:
                       type: array
                       items:
                         type: object
-                        properties: {}
                         additionalProperties: true
                 numbered_list_item:
                   type: object
@@ -630,7 +613,6 @@ paths:
                       type: array
                       items:
                         type: object
-                        properties: {}
                         additionalProperties: true
                 to_do:
                   type: object
@@ -639,7 +621,6 @@ paths:
                       type: array
                       items:
                         type: object
-                        properties: {}
                         additionalProperties: true
                     checked:
                       type: boolean
@@ -650,7 +631,6 @@ paths:
                       type: array
                       items:
                         type: object
-                        properties: {}
                         additionalProperties: true
                 code:
                   type: object
@@ -659,7 +639,6 @@ paths:
                       type: array
                       items:
                         type: object
-                        properties: {}
                         additionalProperties: true
                     language:
                       type: string
@@ -670,7 +649,6 @@ paths:
                       type: array
                       items:
                         type: object
-                        properties: {}
                         additionalProperties: true
                 archived:
                   type: boolean
@@ -735,10 +713,10 @@ paths:
                     type: string
                   archived:
                     type: boolean
-        '404':
-          description: Block not found
         '401':
           description: Unauthorized
+        '404':
+          description: Block not found
       security:
         - bearerAuth: []
 
