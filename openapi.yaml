@@ -1,742 +1,175 @@
 openapi: 3.1.0
 info:
-  title: Notion API Integration
-  description: Full Notion API for accessing and managing databases, pages, and blocks
-  version: 2.0.0
+  title: Notion API Integration (Multi-source Support)
+  description: Full Notion API updated for version 2025-09-03 introducing first-class support for multi-source databases.
+  version: 3.0.0
 servers:
   - url: https://api.notion.com/v1
     description: Notion API
 
 paths:
-  /databases/{database_id}/query:
-    post:
-      operationId: queryDatabasePages
-      summary: Query pages in a Notion database
-      description: Retrieves pages from a database with optional filtering and sorting
+  # 1. 데이터베이스 조회 (이제 데이터 소스 목록을 반환함)
+  /databases/{database_id}:
+    get:
+      operationId: getDatabase
+      summary: Retrieve a database
+      description: Returns a list of child data_sources for the given database.
       parameters:
         - in: path
           name: database_id
           required: true
           schema:
             type: string
-          description: Database ID (without hyphens)
-        - in: header
-          name: Notion-Version
+        - $ref: '#/components/parameters/NotionVersion'
+      responses:
+        '200':
+          description: List of data sources retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Database'
+
+  # 2. 데이터 소스 쿼리 (기존 /databases/{id}/query에서 경로 변경)
+  /data_sources/{data_source_id}/query:
+    post:
+      operationId: queryDataSourcePages
+      summary: Query pages in a data source
+      description: Retrieves pages from a specific data source.
+      parameters:
+        - in: path
+          name: data_source_id
           required: true
           schema:
             type: string
-            default: '2022-06-28'
+        - $ref: '#/components/parameters/NotionVersion'
       requestBody:
-        required: false
         content:
           application/json:
             schema:
-              type: object
-              properties:
-                filter:
-                  type: object
-                  additionalProperties: true
-                  description: Filter conditions
-                sorts:
-                  type: array
-                  items:
-                    type: object
-                    additionalProperties: true
-                  description: Sort order
-                start_cursor:
-                  type: string
-                  description: Pagination cursor
-                page_size:
-                  type: integer
-                  minimum: 1
-                  maximum: 100
-                  description: Number of results (max 100)
-            example:
-              page_size: 10
+              $ref: '#/components/schemas/QueryRequest'
       responses:
         '200':
           description: Successfully retrieved pages
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  object:
-                    type: string
-                    example: list
-                  results:
-                    type: array
-                    items:
-                      type: object
-                      additionalProperties: true
-                  next_cursor:
-                    type: string
-                    nullable: true
-                  has_more:
-                    type: boolean
-                  type:
-                    type: string
-                  page_or_database:
-                    type: object
-                    additionalProperties: true
         '400':
-          description: Bad request
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-        '401':
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-      security:
-        - bearerAuth: []
+          $ref: '#/components/responses/ErrorResponse'
 
+  # 3. 페이지 생성 (부모를 data_source_id로 설정 권장)
   /pages:
     post:
       operationId: createPage
       summary: Create a new page
-      description: Creates a new page in a database or as a child of another page
       parameters:
-        - in: header
-          name: Notion-Version
-          required: true
-          schema:
-            type: string
-            default: '2022-06-28'
+        - $ref: '#/components/parameters/NotionVersion'
       requestBody:
         required: true
         content:
           application/json:
             schema:
               type: object
-              required:
-                - parent
+              required: [parent, properties]
               properties:
                 parent:
                   type: object
-                  properties:
-                    database_id:
-                      type: string
-                    page_id:
-                      type: string
-                    type:
-                      type: string
-                  description: Parent database or page
+                  oneOf:
+                    - properties:
+                        type: { type: string, enum: [data_source_id] }
+                        data_source_id: { type: string }
+                    - properties:
+                        type: { type: string, enum: [page_id] }
+                        page_id: { type: string }
                 properties:
                   type: object
                   additionalProperties: true
-                  description: Page properties
-                children:
-                  type: array
-                  items:
-                    type: object
-                    additionalProperties: true
-                  description: Initial content blocks
-                icon:
-                  type: object
-                  properties:
-                    type:
-                      type: string
-                      enum: [emoji, external, file]
-                    emoji:
-                      type: string
-                  description: Page icon
-                cover:
-                  type: object
-                  properties:
-                    type:
-                      type: string
-                    external:
-                      type: object
-                  description: Cover image
-            example:
-              parent:
-                database_id: xxxx
-              properties:
-                Name:
-                  title:
-                    - text:
-                        content: New Page
       responses:
         '200':
           description: Page created successfully
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  object:
-                    type: string
-                  id:
-                    type: string
-                  properties:
-                    type: object
-                    additionalProperties: true
-        '400':
-          description: Bad request
-        '401':
-          description: Unauthorized
-      security:
-        - bearerAuth: []
 
-  /pages/{page_id}:
+  # 4. 데이터 소스 정보 조회 및 수정 (새로운 엔드포인트)
+  /data_sources/{data_source_id}:
     get:
-      operationId: getPage
-      summary: Retrieve a page
-      description: Gets page metadata and properties
+      operationId: getDataSource
+      summary: Retrieve a data source
       parameters:
         - in: path
-          name: page_id
+          name: data_source_id
           required: true
           schema:
             type: string
-        - in: header
-          name: Notion-Version
-          required: true
-          schema:
-            type: string
-            default: '2022-06-28'
+        - $ref: '#/components/parameters/NotionVersion'
       responses:
         '200':
-          description: Page retrieved successfully
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  object:
-                    type: string
-                  id:
-                    type: string
-                  created_time:
-                    type: string
-                  last_edited_time:
-                    type: string
-                  properties:
-                    type: object
-                    additionalProperties: true
-                  parent:
-                    type: object
-                    additionalProperties: true
-                  archived:
-                    type: boolean
-        '401':
-          description: Unauthorized
-        '404':
-          description: Page not found
-      security:
-        - bearerAuth: []
-    
+          description: Data source metadata and properties (schema) retrieved.
     patch:
-      operationId: updatePage
-      summary: Update page properties
-      description: Updates properties of an existing page
+      operationId: updateDataSource
+      summary: Update a data source
+      description: Updates properties (schema) or title of a specific data source.
       parameters:
         - in: path
-          name: page_id
+          name: data_source_id
           required: true
           schema:
             type: string
-        - in: header
-          name: Notion-Version
-          required: true
-          schema:
-            type: string
-            default: '2022-06-28'
+        - $ref: '#/components/parameters/NotionVersion'
       requestBody:
-        required: true
         content:
           application/json:
             schema:
               type: object
               properties:
-                properties:
-                  type: object
-                  additionalProperties: true
-                  description: Page properties to update
-                archived:
-                  type: boolean
-                icon:
-                  type: object
-                  additionalProperties: true
-                cover:
-                  type: object
-                  additionalProperties: true
+                title: { type: array, items: { type: object } }
+                properties: { type: object, additionalProperties: true }
       responses:
         '200':
-          description: Page updated successfully
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  object:
-                    type: string
-                  id:
-                    type: string
-                  properties:
-                    type: object
-                    additionalProperties: true
-        '400':
-          description: Bad request
-        '401':
-          description: Unauthorized
-      security:
-        - bearerAuth: []
-
-  /blocks/{block_id}/children:
-    get:
-      operationId: getBlockChildren
-      summary: Get block children
-      description: Retrieves child blocks of a page or block
-      parameters:
-        - in: path
-          name: block_id
-          required: true
-          schema:
-            type: string
-          description: Block or page ID
-        - in: query
-          name: start_cursor
-          schema:
-            type: string
-        - in: query
-          name: page_size
-          schema:
-            type: integer
-            minimum: 1
-            maximum: 100
-        - in: header
-          name: Notion-Version
-          required: true
-          schema:
-            type: string
-            default: '2022-06-28'
-      responses:
-        '200':
-          description: Block children retrieved
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  object:
-                    type: string
-                  results:
-                    type: array
-                    items:
-                      type: object
-                      additionalProperties: true
-                  next_cursor:
-                    type: string
-                    nullable: true
-                  has_more:
-                    type: boolean
-        '401':
-          description: Unauthorized
-        '404':
-          description: Block not found
-      security:
-        - bearerAuth: []
-    
-    patch:
-      operationId: appendBlockChildren
-      summary: Append block children
-      description: Adds child blocks to a page or block
-      parameters:
-        - in: path
-          name: block_id
-          required: true
-          schema:
-            type: string
-        - in: header
-          name: Notion-Version
-          required: true
-          schema:
-            type: string
-            default: '2022-06-28'
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required:
-                - children
-              properties:
-                children:
-                  type: array
-                  items:
-                    type: object
-                    properties:
-                      object:
-                        type: string
-                        default: block
-                      type:
-                        type: string
-                        enum: [paragraph, heading_1, heading_2, heading_3, bulleted_list_item, numbered_list_item, to_do, toggle, code, quote, callout, divider]
-                      paragraph:
-                        type: object
-                        properties:
-                          rich_text:
-                            type: array
-                            items:
-                              type: object
-                              properties:
-                                type:
-                                  type: string
-                                  default: text
-                                text:
-                                  type: object
-                                  properties:
-                                    content:
-                                      type: string
-                      heading_1:
-                        type: object
-                        properties:
-                          rich_text:
-                            type: array
-                            items:
-                              type: object
-                      heading_2:
-                        type: object
-                        properties:
-                          rich_text:
-                            type: array
-                            items:
-                              type: object
-                      heading_3:
-                        type: object
-                        properties:
-                          rich_text:
-                            type: array
-                            items:
-                              type: object
-                      bulleted_list_item:
-                        type: object
-                        properties:
-                          rich_text:
-                            type: array
-                            items:
-                              type: object
-                      numbered_list_item:
-                        type: object
-                        properties:
-                          rich_text:
-                            type: array
-                            items:
-                              type: object
-                      to_do:
-                        type: object
-                        properties:
-                          rich_text:
-                            type: array
-                            items:
-                              type: object
-                          checked:
-                            type: boolean
-                      toggle:
-                        type: object
-                        properties:
-                          rich_text:
-                            type: array
-                            items:
-                              type: object
-                      code:
-                        type: object
-                        properties:
-                          rich_text:
-                            type: array
-                            items:
-                              type: object
-                          language:
-                            type: string
-                      quote:
-                        type: object
-                        properties:
-                          rich_text:
-                            type: array
-                            items:
-                              type: object
-                  description: Array of block objects to append
-            example:
-              children:
-                - object: block
-                  type: paragraph
-                  paragraph:
-                    rich_text:
-                      - type: text
-                        text:
-                          content: This is a new paragraph
-      responses:
-        '200':
-          description: Blocks appended successfully
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  object:
-                    type: string
-                  results:
-                    type: array
-                    items:
-                      type: object
-                      additionalProperties: true
-        '400':
-          description: Bad request
-        '401':
-          description: Unauthorized
-      security:
-        - bearerAuth: []
-
-  /blocks/{block_id}:
-    get:
-      operationId: getBlock
-      summary: Retrieve a block
-      description: Gets a single block by ID
-      parameters:
-        - in: path
-          name: block_id
-          required: true
-          schema:
-            type: string
-        - in: header
-          name: Notion-Version
-          required: true
-          schema:
-            type: string
-            default: '2022-06-28'
-      responses:
-        '200':
-          description: Block retrieved
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  object:
-                    type: string
-                  id:
-                    type: string
-                  type:
-                    type: string
-                  created_time:
-                    type: string
-                  last_edited_time:
-                    type: string
-        '401':
-          description: Unauthorized
-        '404':
-          description: Block not found
-      security:
-        - bearerAuth: []
-    
-    patch:
-      operationId: updateBlock
-      summary: Update a block
-      description: Updates the content of an existing block
-      parameters:
-        - in: path
-          name: block_id
-          required: true
-          schema:
-            type: string
-        - in: header
-          name: Notion-Version
-          required: true
-          schema:
-            type: string
-            default: '2022-06-28'
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                paragraph:
-                  type: object
-                  properties:
-                    rich_text:
-                      type: array
-                      items:
-                        type: object
-                        properties:
-                          type:
-                            type: string
-                            default: text
-                          text:
-                            type: object
-                            properties:
-                              content:
-                                type: string
-                heading_1:
-                  type: object
-                  properties:
-                    rich_text:
-                      type: array
-                      items:
-                        type: object
-                        additionalProperties: true
-                heading_2:
-                  type: object
-                  properties:
-                    rich_text:
-                      type: array
-                      items:
-                        type: object
-                        additionalProperties: true
-                heading_3:
-                  type: object
-                  properties:
-                    rich_text:
-                      type: array
-                      items:
-                        type: object
-                        additionalProperties: true
-                bulleted_list_item:
-                  type: object
-                  properties:
-                    rich_text:
-                      type: array
-                      items:
-                        type: object
-                        additionalProperties: true
-                numbered_list_item:
-                  type: object
-                  properties:
-                    rich_text:
-                      type: array
-                      items:
-                        type: object
-                        additionalProperties: true
-                to_do:
-                  type: object
-                  properties:
-                    rich_text:
-                      type: array
-                      items:
-                        type: object
-                        additionalProperties: true
-                    checked:
-                      type: boolean
-                toggle:
-                  type: object
-                  properties:
-                    rich_text:
-                      type: array
-                      items:
-                        type: object
-                        additionalProperties: true
-                code:
-                  type: object
-                  properties:
-                    rich_text:
-                      type: array
-                      items:
-                        type: object
-                        additionalProperties: true
-                    language:
-                      type: string
-                quote:
-                  type: object
-                  properties:
-                    rich_text:
-                      type: array
-                      items:
-                        type: object
-                        additionalProperties: true
-                archived:
-                  type: boolean
-            example:
-              paragraph:
-                rich_text:
-                  - type: text
-                    text:
-                      content: Updated paragraph content
-      responses:
-        '200':
-          description: Block updated successfully
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  object:
-                    type: string
-                  id:
-                    type: string
-                  type:
-                    type: string
-                  created_time:
-                    type: string
-                  last_edited_time:
-                    type: string
-        '400':
-          description: Bad request
-        '401':
-          description: Unauthorized
-      security:
-        - bearerAuth: []
-    
-    delete:
-      operationId: deleteBlock
-      summary: Delete a block
-      description: Archives (deletes) a block
-      parameters:
-        - in: path
-          name: block_id
-          required: true
-          schema:
-            type: string
-        - in: header
-          name: Notion-Version
-          required: true
-          schema:
-            type: string
-            default: '2022-06-28'
-      responses:
-        '200':
-          description: Block deleted
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  object:
-                    type: string
-                  id:
-                    type: string
-                  archived:
-                    type: boolean
-        '401':
-          description: Unauthorized
-        '404':
-          description: Block not found
-      security:
-        - bearerAuth: []
+          description: Data source updated.
 
 components:
-  securitySchemes:
-    bearerAuth:
-      type: http
-      scheme: bearer
-      description: Notion Integration Token (format - ntn_xxxxxxxxxxxx)
-  
+  parameters:
+    NotionVersion:
+      in: header
+      name: Notion-Version
+      required: true
+      schema:
+        type: string
+        default: '2025-09-03'
+      example: '2025-09-03'
+
+  responses:
+    ErrorResponse:
+      description: Error occurred
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
   schemas:
+    Database:
+      type: object
+      properties:
+        object: { type: string, example: "database" }
+        id: { type: string }
+        data_sources:
+          type: array
+          items:
+            type: object
+            properties:
+              id: { type: string }
+              name: { type: string }
+    
+    QueryRequest:
+      type: object
+      properties:
+        filter: { type: object }
+        sorts: { type: array, items: { type: object } }
+        page_size: { type: integer, maximum: 100 }
+        start_cursor: { type: string }
+
     Error:
       type: object
       properties:
-        object:
-          type: string
-          example: error
-        status:
-          type: integer
-        code:
-          type: string
-        message:
-          type: string
+        object: { type: string, example: "error" }
+        status: { type: integer }
+        code: { type: string }
+        message: { type: string }
+
+security:
+  - bearerAuth: []
