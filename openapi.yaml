@@ -6,6 +6,10 @@ info:
 servers:
   - url: https://api.notion.com/v1
     description: Notion API
+    variables: {}
+x-notion-version:
+  description: Required Notion API version header
+  value: "2022-06-28"
 
 paths:
   /databases/{database_id}/query:
@@ -20,13 +24,6 @@ paths:
           schema:
             type: string
           description: Database ID (without hyphens)
-        - in: header
-          name: Notion-Version
-          required: true
-          schema:
-            type: string
-            default: "2022-06-28"
-          description: Notion API version
       requestBody:
         required: false
         content:
